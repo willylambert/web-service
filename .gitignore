@@ -3,7 +3,7 @@
 /dist/
 *.exe
 *.test
-server
+/server
 
 # Go
 *.out
