@@ -1,6 +1,6 @@
 # web-service
 
-A small Go HTTP service with health checks, graceful shutdown, and a sample JSON API.
+A small Go HTTP service built with [Gin](https://github.com/gin-gonic/gin), with health checks, graceful shutdown, and a sample JSON API.
 
 ## Requirements
 

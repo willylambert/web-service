@@ -6,14 +6,20 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/willylambert/web-service/internal/handlers"
 )
+
+func TestMain(m *testing.M) {
+	gin.SetMode(gin.TestMode)
+	m.Run()
+}
 
 func TestHealth(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
 	rr := httptest.NewRecorder()
 
-	handlers.NewMux().ServeHTTP(rr, req)
+	handlers.NewRouter().ServeHTTP(rr, req)
 
 	if rr.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", rr.Code, http.StatusOK)
@@ -32,7 +38,7 @@ func TestHelloDefault(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/hello", nil)
 	rr := httptest.NewRecorder()
 
-	handlers.NewMux().ServeHTTP(rr, req)
+	handlers.NewRouter().ServeHTTP(rr, req)
 
 	if rr.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", rr.Code, http.StatusOK)
@@ -51,7 +57,7 @@ func TestHelloWithName(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/hello?name=Ada", nil)
 	rr := httptest.NewRecorder()
 
-	handlers.NewMux().ServeHTTP(rr, req)
+	handlers.NewRouter().ServeHTTP(rr, req)
 
 	if rr.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", rr.Code, http.StatusOK)

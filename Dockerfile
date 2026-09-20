@@ -2,7 +2,7 @@
 
 FROM golang:1.22-alpine AS build
 WORKDIR /src
-COPY go.mod ./
+COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/server ./cmd/server
@@ -13,4 +13,5 @@ USER appuser
 COPY --from=build /out/server /server
 EXPOSE 8080
 ENV ADDR=:8080
+ENV GIN_MODE=release
 ENTRYPOINT ["/server"]
