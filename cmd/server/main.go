@@ -10,11 +10,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/willylambert/web-service/internal/config"
 	"github.com/willylambert/web-service/internal/handlers"
 )
 
 func main() {
+	gin.SetMode(gin.ReleaseMode)
+
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	cfg := config.Load()
 
