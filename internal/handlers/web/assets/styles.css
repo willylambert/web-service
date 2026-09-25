@@ -415,6 +415,12 @@ body {
   font-size: 0.75rem;
 }
 
+.board__actions {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+}
+
 .refresh {
   appearance: none;
   border: 1px solid var(--rail);
@@ -435,6 +441,11 @@ body {
   border-color: var(--amber);
   background: rgba(242, 193, 78, 0.08);
   outline: none;
+}
+
+.install:not([hidden]) {
+  border-color: var(--amber);
+  color: var(--amber);
 }
 
 @media (min-width: 720px) {

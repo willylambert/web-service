@@ -3,6 +3,7 @@ const statusEl = document.getElementById("status");
 const updatedEl = document.getElementById("updated");
 const clockEl = document.getElementById("clock");
 const refreshBtn = document.getElementById("refresh");
+const installBtn = document.getElementById("install");
 const tabs = [...document.querySelectorAll(".tab")];
 
 function defaultDirection(date = new Date()) {
@@ -11,6 +12,7 @@ function defaultDirection(date = new Date()) {
 
 let direction = defaultDirection();
 let timer;
+let deferredInstallPrompt = null;
 
 function formatClock(date = new Date()) {
   return date.toLocaleTimeString("fr-FR", {
@@ -73,7 +75,7 @@ function renderTrains(trains) {
             <div class="train__body">
               ${
                 saintMathurinTime
-                  ? `<div class="train__secondary"><strong>${escapeHtml(saintMathurinTime)}</strong><span>Saint-Mathurin</span></div>`
+                  ? `<div class="train__secondary"><strong>${escapeHtml(saintMathurinTime)}</strong><span>St Math</span></div>`
                   : ""
               }
               <div class="train__secondary"><strong>${escapeHtml(menitreTime)}</strong><span>La Ménitré</span></div>
@@ -99,7 +101,7 @@ function renderTrains(trains) {
           <div class="train__body">
             ${
               saintMathurinTime
-                ? `<div class="train__secondary"><strong>${escapeHtml(saintMathurinTime)}</strong><span>Saint-Mathurin</span></div>`
+                ? `<div class="train__secondary"><strong>${escapeHtml(saintMathurinTime)}</strong><span>St Math</span></div>`
                 : ""
             }
             ${
@@ -165,9 +167,38 @@ tabs.forEach((tab) => {
 
 refreshBtn.addEventListener("click", () => loadBoard());
 
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  if (installBtn) installBtn.hidden = false;
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+  if (installBtn) installBtn.hidden = true;
+});
+
+if (installBtn) {
+  installBtn.addEventListener("click", async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    installBtn.hidden = true;
+  });
+}
+
 tickClock();
 setInterval(tickClock, 1000);
 selectTab(direction);
 timer = setInterval(loadBoard, 60_000);
 
 window.addEventListener("beforeunload", () => clearInterval(timer));
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      /* ignore offline registration errors */
+    });
+  });
+}

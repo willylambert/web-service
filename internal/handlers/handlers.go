@@ -58,6 +58,29 @@ func NewRouter(trains BoardProvider) *gin.Engine {
 			}
 			c.Data(http.StatusOK, "text/html; charset=utf-8", data)
 		})
+		r.GET("/manifest.webmanifest", func(c *gin.Context) {
+			data, readErr := fs.ReadFile(webRoot, "manifest.webmanifest")
+			if readErr != nil {
+				c.Status(http.StatusNotFound)
+				return
+			}
+			c.Header("Cache-Control", "no-cache")
+			c.Data(http.StatusOK, "application/manifest+json", data)
+		})
+		r.GET("/sw.js", func(c *gin.Context) {
+			data, readErr := fs.ReadFile(webRoot, "sw.js")
+			if readErr != nil {
+				c.Status(http.StatusNotFound)
+				return
+			}
+			c.Header("Cache-Control", "no-cache")
+			c.Header("Service-Worker-Allowed", "/")
+			c.Data(http.StatusOK, "application/javascript; charset=utf-8", data)
+		})
+		icons, iconsErr := fs.Sub(webRoot, "icons")
+		if iconsErr == nil {
+			r.StaticFS("/icons", http.FS(icons))
+		}
 		assets, assetsErr := fs.Sub(webRoot, "assets")
 		if assetsErr == nil {
 			r.StaticFS("/assets", http.FS(assets))
