@@ -1,6 +1,6 @@
 /* Minimal service worker so the app qualifies as installable.
    Network-first for API; cache-first for shell assets. */
-const CACHE = "ouiligo-v1";
+const CACHE = "ouiligo-v3";
 const SHELL = [
   "/",
   "/manifest.webmanifest",
