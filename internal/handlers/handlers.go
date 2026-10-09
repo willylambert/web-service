@@ -15,11 +15,12 @@ import (
 //go:embed web
 var webFS embed.FS
 
-// BoardProvider fetches train boards.
+// BoardProvider fetches train boards and journey details.
 type BoardProvider interface {
 	Configured() bool
 	Departures(ctx context.Context, count int) (*sncf.Board, error)
 	Arrivals(ctx context.Context, count int) (*sncf.Board, error)
+	JourneyStops(ctx context.Context, vehicleJourneyID string) (*sncf.JourneyDetail, error)
 }
 
 // HealthResponse is returned by the health check endpoint.
@@ -47,6 +48,7 @@ func NewRouter(trains BoardProvider) *gin.Engine {
 	r.GET("/healthz", Health)
 	r.GET("/api/v1/hello", Hello)
 	r.GET("/api/v1/trains", Trains(trains))
+	r.GET("/api/v1/trains/journey", TrainJourney(trains))
 
 	webRoot, err := fs.Sub(webFS, "web")
 	if err == nil {
@@ -106,13 +108,20 @@ func Hello(c *gin.Context) {
 	})
 }
 
+func requireConfigured(c *gin.Context, provider BoardProvider) bool {
+	if provider == nil || !provider.Configured() {
+		c.JSON(http.StatusServiceUnavailable, ErrorResponse{
+			Error: "SNCF API token missing. Set SNCF_API_TOKEN (free key at https://numerique.sncf.com/startup/api/).",
+		})
+		return false
+	}
+	return true
+}
+
 // Trains returns the next departures or arrivals for La Ménitré.
 func Trains(provider BoardProvider) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if provider == nil || !provider.Configured() {
-			c.JSON(http.StatusServiceUnavailable, ErrorResponse{
-				Error: "SNCF API token missing. Set SNCF_API_TOKEN (free key at https://numerique.sncf.com/startup/api/).",
-			})
+		if !requireConfigured(c, provider) {
 			return
 		}
 
@@ -139,5 +148,25 @@ func Trains(provider BoardProvider) gin.HandlerFunc {
 			return
 		}
 		c.JSON(http.StatusOK, board)
+	}
+}
+
+// TrainJourney returns the stop list for a vehicle journey.
+func TrainJourney(provider BoardProvider) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if !requireConfigured(c, provider) {
+			return
+		}
+		id := c.Query("vehicle_journey_id")
+		if id == "" {
+			c.JSON(http.StatusBadRequest, ErrorResponse{Error: "vehicle_journey_id is required"})
+			return
+		}
+		detail, err := provider.JourneyStops(c.Request.Context(), id)
+		if err != nil {
+			c.JSON(http.StatusBadGateway, ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, detail)
 	}
 }

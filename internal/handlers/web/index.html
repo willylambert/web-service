@@ -48,6 +48,22 @@
       </div>
     </footer>
   </main>
+
+  <dialog id="train-detail" class="train-detail">
+    <form method="dialog" class="train-detail__sheet">
+      <header class="train-detail__header">
+        <div>
+          <p class="train-detail__eyebrow" id="detail-eyebrow">Parcours</p>
+          <h2 class="train-detail__title" id="detail-title">Train</h2>
+        </div>
+        <button type="submit" class="train-detail__close" aria-label="Fermer">✕</button>
+      </header>
+      <ol class="train-detail__stops" id="detail-stops">
+        <li class="train-detail__loading">Chargement des arrêts…</li>
+      </ol>
+    </form>
+  </dialog>
+
   <script src="/assets/app.js" type="module"></script>
 </body>
 </html>

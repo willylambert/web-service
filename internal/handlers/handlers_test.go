@@ -112,6 +112,15 @@ func (s stubBoard) Departures(ctx context.Context, count int) (*sncf.Board, erro
 func (s stubBoard) Arrivals(ctx context.Context, count int) (*sncf.Board, error) {
 	return s.board, nil
 }
+func (s stubBoard) JourneyStops(ctx context.Context, vehicleJourneyID string) (*sncf.JourneyDetail, error) {
+	return &sncf.JourneyDetail{
+		VehicleJourneyID: vehicleJourneyID,
+		Stops: []sncf.JourneyStop{
+			{Name: "La Ménitré", DepartureTime: "08:42"},
+			{Name: "Angers Saint-Laud", ArrivalTime: "09:05"},
+		},
+	}, nil
+}
 
 func TestTrainsDepartures(t *testing.T) {
 	stub := stubBoard{board: &sncf.Board{
@@ -140,5 +149,21 @@ func TestTrainsDepartures(t *testing.T) {
 	}
 	if len(body.Trains) != 1 || body.Trains[0].Direction != "Angers Saint-Laud" {
 		t.Fatalf("unexpected board: %+v", body)
+	}
+}
+
+func TestTrainJourney(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/trains/journey?vehicle_journey_id=vj:1", nil)
+	rr := httptest.NewRecorder()
+	handlers.NewRouter(stubBoard{}).ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d body=%s", rr.Code, http.StatusOK, rr.Body.String())
+	}
+	var body sncf.JourneyDetail
+	if err := json.NewDecoder(rr.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if body.VehicleJourneyID != "vj:1" || len(body.Stops) != 2 {
+		t.Fatalf("unexpected journey: %+v", body)
 	}
 }
